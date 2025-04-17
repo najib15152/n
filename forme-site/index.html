@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>موقع إدخال المعلومات الشخصية</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f2f2f2;
+      direction: rtl;
+      text-align: right;
+      padding: 30px;
+    }
+    .step {
+      display: none;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    .step.active {
+      display: block;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #aaa;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>موقع إدخال المعلومات الشخصية</h2>
+
+  <form id="multiStepForm">
+    <!-- الخطوة 1 -->
+    <div class="step active" id="step1">
+      <label>الاسم:</label>
+      <input type="text" id="firstName" required>
+      <label>النسب:</label>
+      <input type="text" id="lastName" required>
+    </div>
+
+    <!-- الخطوة 2 -->
+    <div class="step" id="step2">
+      <label>رقم الهاتف:</label>
+      <input type="tel" id="phone" required>
+      <label>مكان السكن:</label>
+      <input type="text" id="address" required>
+    </div>
+
+    <!-- الخطوة 3 -->
+    <div class="step" id="step3">
+      <label>رقم البطاقة الوطنية:</label>
+      <input type="text" id="cin" required>
+    </div>
+
+    <!-- أزرار التنقل -->
+    <div style="margin-top: 20px;">
+      <button type="button" onclick="prevStep()" id="prevBtn" disabled>السابق</button>
+      <button type="button" onclick="nextStep()" id="nextBtn">التالي</button>
+      <button type="submit" id="submitBtn" style="display:none;">إرسال</button>
+    </div>
+  </form>
+
+  <!-- زر تحميل البيانات كملف Excel -->
+  <button onclick="downloadExcel()">📥 تحميل Excel</button>
+
+  <script>
+    let currentStep = 1;
+
+    // عرض الخطوات بشكل ديناميكي
+    function showStep(step) {
+      document.querySelectorAll('.step').forEach((el, index) => {
+        el.classList.remove('active');
+        if (index + 1 === step) el.classList.add('active');
+      });
+
+      document.getElementById('prevBtn').disabled = step === 1;
+      document.getElementById('nextBtn').style.display = step === 3 ? 'none' : 'inline-block';
+      document.getElementById('submitBtn').style.display = step === 3 ? 'inline-block' : 'none';
+    }
+
+    // التنقل بين الخطوات
+    function nextStep() {
+      if (currentStep < 3) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    }
+
+    // إرسال البيانات
+    document.getElementById('multiStepForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = {
+        الاسم: document.getElementById('firstName').value,
+        النسب: document.getElementById('lastName').value,
+        الهاتف: document.getElementById('phone').value,
+        السكن: document.getElementById('address').value,
+        البطاقة: document.getElementById('cin').value,
+      };
+
+      // حفظ البيانات في LocalStorage
+      let users = JSON.parse(localStorage.getItem('users')) || [];
+      users.push(data);
+      localStorage.setItem('users', JSON.stringify(users));
+
+      alert("✅ تم إرسال المعلومات بنجاح!");
+      this.reset();
+      currentStep = 1;
+      showStep(currentStep);
+    });
+
+    // تحميل البيانات كملف Excel (CSV)
+    function downloadExcel() {
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      if (users.length === 0) {
+        alert("لا يوجد بيانات.");
+        return;
+      }
+
+      let csvContent = "الاسم,النسب,الهاتف,السكن,رقم البطاقة الوطنية\n";
+      users.forEach(user => {
+        csvContent += `${user.الاسم},${user.النسب},${user.الهاتف},${user.السكن},${user.البطاقة}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.setAttribute("href", URL.createObjectURL(blob));
+      link.setAttribute("download", "تسجيلات.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+
+</body>
+</html>
